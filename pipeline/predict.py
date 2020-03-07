@@ -15,5 +15,6 @@ class Predict(Pipeline):
         image = data["image"]
         predictions = self.predictor(image)
         data["predictions"] = predictions
-
+        # Not printing anything
+        # print('predictions')
         return data

@@ -9,6 +9,7 @@ from detectron2.utils.video_visualizer import VideoVisualizer
 from pipeline.pipeline import Pipeline
 from pipeline.utils.colors import colors
 from pipeline.utils.text import put_text
+from pipeline.annotate_predictions import DetectionsAnnotations
 
 
 class AnnotateVideo(Pipeline):
@@ -26,10 +27,10 @@ class AnnotateVideo(Pipeline):
 
         self.cpu_device = torch.device("cpu")
         self.video_visualizer = VideoVisualizer(self.metadata, self.instance_mode)
-
+        self.detections_annotations = DetectionsAnnotations(self.metadata)
         super().__init__()
 
-    def map(self, data):
+    def map(self, data): 
         dst_image = data["image"].copy()
         data[self.dst] = dst_image
 
@@ -70,11 +71,12 @@ class AnnotateVideo(Pipeline):
                                                            sem_seg.to(self.cpu_device))
         elif "instances" in predictions:
             instances = predictions["instances"]
-            vis_image = self.video_visualizer.draw_instance_predictions(dst_image,
+            # vis_image = self.video_visualizer.draw_instance_predictions(dst_image,
+            #                                                             instances.to(self.cpu_device))
+            vis_image = self.detections_annotations.draw_instance_predictions(dst_image,
                                                                         instances.to(self.cpu_device))
-
         # Converts RGB format to OpenCV BGR format
-        vis_image = cv2.cvtColor(vis_image.get_image(), cv2.COLOR_RGB2BGR)
+        #vis_image = cv2.cvtColor(vis_image.get_image(), cv2.COLOR_RGB2BGR)
         data[self.dst] = vis_image
 
     def annotate_pose_flows(self, data):

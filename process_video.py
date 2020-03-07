@@ -120,13 +120,17 @@ def main(args):
         if args.out_video else None
 
     # Create image processing pipeline
+    # pipeline = (capture_video |
+    #             predict |
+    #             track_pose |
+    #             separate_background |
+    #             annotate_video |
+    #             display_video |
+    #             save_video)
+
     pipeline = (capture_video |
                 predict |
-                track_pose |
-                separate_background |
-                annotate_video |
-                display_video |
-                save_video)
+                annotate_video )
 
     # Iterate through pipeline
     try:
@@ -134,6 +138,7 @@ def main(args):
                       total=capture_video.frame_count if capture_video.frame_count > 0 else None,
                       disable=not args.progress):
             pass
+
     except StopIteration:
         return
     except KeyboardInterrupt:

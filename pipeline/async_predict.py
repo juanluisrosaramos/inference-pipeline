@@ -41,7 +41,7 @@ class AsyncPredict(Pipeline):
                 predictions = self.predictor.get()
                 data = buffer.popleft()
                 data["predictions"] = predictions
-
+                #print('predictions 5',predictions)
                 if self.filter(data):
                     yield self.map(data)
 
@@ -49,7 +49,7 @@ class AsyncPredict(Pipeline):
             predictions = self.predictor.get()
             data = buffer.popleft()
             data["predictions"] = predictions
-
+            print('predictions1',predictions)
             if self.filter(data):
                 yield self.map(data)
 
@@ -70,6 +70,7 @@ class AsyncPredict(Pipeline):
                 image_id, predictions = self.predictor.get()
                 data = buffer[image_id]
                 data["predictions"] = predictions
+                print('predictions 2',predictions)
                 del buffer[image_id]
 
                 if self.filter(data):
@@ -79,6 +80,7 @@ class AsyncPredict(Pipeline):
             image_id, predictions = self.predictor.get()
             data = buffer[image_id]
             data["predictions"] = predictions
+            print('predictions 3',predictions)
             del buffer[image_id]
 
             if self.filter(data):

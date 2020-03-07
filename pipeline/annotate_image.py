@@ -32,6 +32,8 @@ class AnnotateImage(Pipeline):
             return
 
         predictions = data["predictions"]
+        print('predictions',predictions)
+
         dst_image = data[self.dst]
         dst_image = dst_image[:, :, ::-1]  # Convert OpenCV BGR to RGB format
 
