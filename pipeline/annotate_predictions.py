@@ -1,96 +1,68 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+import cv2
+import torch
 import numpy as np
-import pycocotools.mask as mask_util
+
+from detectron2.data import MetadataCatalog
+#from detectron2.utils.visualizer import ColorMode
+# from detectron2.utils.video_visualizer import VideoVisualizer
+# from detectron2.utils.visualizer import Visualizer
+
+from pipeline.pipeline import Pipeline
+# from pipeline.utils.colors import colors
+# from pipeline.utils.text import put_text
+from pipeline.build_predictions import DetectionsTxt
 
 
-class _DetectedInstance:
-    """
-    Used to store data about detected objects in video frame,
-    in order to transfer color to objects in the future frames.
+class AnnotatePredictions(Pipeline):
+    """Pipeline task for video annotation."""
 
-    Attributes:
-        label (int):
-        bbox (tuple[float]):
-        mask_rle (dict):
-        color (tuple[float]): RGB colors in range (0, 1)
-        ttl (int): time-to-live for the instance. For example, if ttl=2,
-            the instance color can be transferred to objects in the next two frames.
-    """
+    def __init__(self, dst, metadata_name,frame_num=True, predictions=True):
+        self.dst = dst
+        self.metadata_name = metadata_name
+        self.metadata = MetadataCatalog.get(self.metadata_name)
+        #self.instance_mode = instance_mode
+        self.frame_num = frame_num
+        self.predictions = predictions
+        #self.pose_flows = pose_flows
 
-    __slots__ = ["label", "bbox", "mask_rle", "color", "ttl"]
+        self.cpu_device = torch.device("cpu")
+        #self.video_detections = DetectionsTxTLine(self.metadata, self.instance_mode)
+#        self.visualizer = Visualizer(self.metadata, self.instance_mode)
 
-    def __init__(self, label, bbox, mask_rle, color, ttl):
-        self.label = label
-        self.bbox = bbox
-        self.mask_rle = mask_rle
-        self.color = color
-        self.ttl = ttl
+        self.detections_annotations = DetectionsTxt(self.metadata)
+        super().__init__()
 
-def _create_text_labels(classes, scores, class_names):
-    """
-    Args:
-        classes (list[int] or None):
-        scores (list[float] or None):
-        class_names (list[str] or None):
+    def map(self, data): 
+        #dst_image = data["image"].copy()
+        #data[self.dst] = dst_image
 
-    Returns:
-        list[str] or None
-    """
-    labels = None
-    if classes is not None and class_names is not None and len(class_names) > 1:
-        labels = [class_names[i] for i in classes]
-    if scores is not None:
-        if labels is None:
-            labels = ["{:.0f}%".format(s * 100) for s in scores]
-        else:
-            labels = ["{} {:.0f}%".format(l, s * 100) for l, s in zip(labels, scores)]
-    return labels
+        if self.frame_num:
+            self.annotate_frame_num(data)
+        if self.predictions:
+            self.annotate_predictions(data)
+        # if self.pose_flows:
+        #     self.annotate_pose_flows(data)
 
+        return data
 
-class DetectionsAnnotations:
-    def __init__(self, metadata):
-        """
-        Args:
-            metadata (MetadataCatalog): image metadata.
-        """
-        self.metadata = metadata
-        self._old_instances = []        
+    def annotate_frame_num(self, data):
+        #dst_image = data[self.dst]
+        frame_idx = data["frame_num"]
 
-    def draw_instance_predictions(self, frame, predictions):
-        """
-        Draw instance-level prediction results on an image.
+        # put_text(dst_image, f"{frame_idx:04d}", (0, 0),
+        #          color=colors.get("white").to_bgr(),
+        #          bg_color=colors.get("black").to_bgr(),
+        #          org_pos="tl")
 
-        Args:
-            frame (ndarray): an RGB image of shape (H, W, C), in the range [0, 255].
-            predictions (Instances): the output of an instance detection/segmentation
-                model. Following fields will be used to draw:
-                "pred_boxes", "pred_classes", "scores", "pred_masks" (or "pred_masks_rle").
-
-        Returns:
-            output (VisImage): image object with visualizations.
-        """
-        num_instances = len(predictions)
-        if num_instances == 0:
-            return frame_visualizer.output
-
-        boxes = predictions.pred_boxes.tensor.numpy() if predictions.has("pred_boxes") else None
-        scores = predictions.scores if predictions.has("scores") else None
-        classes = predictions.pred_classes.numpy() if predictions.has("pred_classes") else None
-        keypoints = predictions.pred_keypoints if predictions.has("pred_keypoints") else None
-
-        if predictions.has("pred_masks"):
-            masks = predictions.pred_masks
-            # mask IOU is not yet enabled
-            # masks_rles = mask_util.encode(np.asarray(masks.permute(1, 2, 0), order="F"))
-            # assert len(masks_rles) == num_instances
-        else:
-            masks = None
-
-        detected = [
-            _DetectedInstance(classes[i], boxes[i], mask_rle=None, color=None, ttl=8)
-            for i in range(num_instances)
-        ]
-
-        labels = _create_text_labels(classes, scores, self.metadata.get("thing_classes", None))
-        print(labels)
-        #return frame_visualizer.output
+    def annotate_predictions(self, data):
+        if "predictions" not in data:
+            return
+        predictions = data["predictions"]
+        if "instances" in predictions:
+            instances = predictions["instances"]
+            tracker_preds = self.detections_annotations.get_instance_predictions(instances.to(self.cpu_device))
+        data[self.dst] = tracker_preds
+        
+        # with PathManager.open(cache_path, "w") as json_file:
+        #     logger.info(f"Caching annotations in COCO format: {cache_path}")
+        #     json.dump(coco_dict, json_file)

@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "/home/juanluis/workingrrr/mapubli/inference-pipeline"
+		}
+	],
+	"settings": {
+		"python.condaPath": "/home/juanluis/anaconda3/envs/detectron2-pipeline/bin"
+	}
+}

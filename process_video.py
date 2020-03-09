@@ -8,6 +8,7 @@ from pipeline.predict import Predict
 from pipeline.async_predict import AsyncPredict
 from pipeline.separate_background import SeparateBackground
 from pipeline.annotate_video import AnnotateVideo
+from pipeline.annotate_predictions import AnnotatePredictions
 from pipeline.display_video import DisplayVideo
 from pipeline.save_video import SaveVideo
 from pipeline.utils import detectron
@@ -111,6 +112,8 @@ def main(args):
         annotate_video = AnnotateVideo("vis_image", metadata_name,
                                        predictions=track_pose is None,
                                        pose_flows=track_pose is not None)
+        annotate_predictions = AnnotatePredictions("tracker_preds", metadata_name,
+                                       predictions=track_pose is None)
 
     display_video = DisplayVideo("vis_image") \
         if args.display else None
@@ -130,7 +133,7 @@ def main(args):
 
     pipeline = (capture_video |
                 predict |
-                annotate_video )
+                annotate_predictions )
 
     # Iterate through pipeline
     try:
