@@ -131,8 +131,9 @@ def main(args):
     #             display_video |
     #             save_video)
 
+#annotate_predictions |
     pipeline = (capture_video |
-                predict |
+                predict |                
                 annotate_predictions )
 
     # Iterate through pipeline

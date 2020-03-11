@@ -31,6 +31,9 @@ class _DetectedInstance:
         #The coordinates in range [0, width or height].
         #XYWH_ABS: (x0, y0, w, h) in absolute floating points coordinates.
         pred = {}
+        # compute centroid of the bbox ((x1+x2)/2, (y1+y2)/2)
+        x,y = ((self.bbox[0]+self.bbox[2])/2, (self.bbox[1]+self.bbox[3])/2)
+        #print(x,y)
         bbox_mode = BoxMode.XYXY_ABS
         #print('self.bbox 11111',self.bbox)
         self.bbox = BoxMode.convert(self.bbox, bbox_mode, BoxMode.XYWH_ABS)
@@ -38,15 +41,13 @@ class _DetectedInstance:
         #{"x":1635,"y":247,"w":61,"h":38,"confidence":38,"name":"car"}
         #TODO we are not sending center point
         pred = {
-            "x":int(self.bbox[0]),
-            "y":int(self.bbox[1]),
+            "x":int(x),
+            "y":int(y),
             "w":int(self.bbox[2]),
             "h":int(self.bbox[3]),
             "confidence":int(float(self.score)*100),
             "name": self.textLabel
         }
-        print(pred)
-        #return (self.bbox + ": " + self.score*100 + ": " + self.textLabel)
         return (pred)
     
 
@@ -86,12 +87,4 @@ class DetectionsTxt:
         for i in range(num_instances):
                 textLabel = self.metadata.get("thing_classes")[classes[i]]
                 detected.append(_DetectedInstance(classes[i],textLabel, boxes[i], scores[i],ttl=8).get_tracker_predictions())
-        
-        # for i in detected:
-        #     print (i)
-
-        #{"frame":0,"detections":[{"x":1635,"y":247,"w":61,"h":38,"confidence":38,"name":"car"},{"x":1799,"y":250,"w":54,"h":33,"confidence":33,"name":"car"}]}
-
-        #labels = _create_text_labels(classes, scores, self.metadata.get("thing_classes", None))
-        #print('lables',labels)
         return detected

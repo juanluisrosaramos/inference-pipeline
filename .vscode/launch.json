@@ -9,7 +9,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "/home/juanluis/workingrrr/mapubli/inference-pipeline/process_video.py",
+            "program": "/home/juanluis/workingrrr/mapubli/detectron2-pipeline/process_video.py",
             "console": "integratedTerminal",
             "args" : ["-i", "assets/videos/gente5.mp4","-p"],
             

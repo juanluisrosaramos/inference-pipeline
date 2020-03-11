@@ -32,6 +32,7 @@ class CaptureVideo(Pipeline):
                 "frame_num": self.frame_num,
                 "image_id": f"{self.frame_num:06d}",
                 "image": image,
+                "tracker_preds": "predictions",
             }
             self.frame_num += 1
             if self.filter(data):
