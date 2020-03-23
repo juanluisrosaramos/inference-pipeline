@@ -10,8 +10,9 @@ from pipeline.build_predictions import DetectionsTxt
 class AnnotatePredictions(Pipeline):
     """Pipeline task for video annotation."""
 
-    def __init__(self, dst, metadata_name,frame_num=True, predictions=True):
+    def __init__(self, dst, metadata_name,frame_num=True, predictions=True,preds_format='MOTchallenge'):
         self.dst = dst
+        self.preds_format = preds_format
         self.metadata_name = metadata_name
         self.metadata = MetadataCatalog.get(self.metadata_name)
         self.frame_num = frame_num
@@ -43,15 +44,23 @@ class AnnotatePredictions(Pipeline):
         if "instances" in predictions:
             instances = predictions["instances"]
             tracker_preds = {
-                "frame":data["frame_num"],
-                "detections":self.detections_annotations.get_instance_predictions(instances.to(self.cpu_device))
+                "frame":str(data["frame_num"]),
+                "detections":self.detections_annotations.get_instance_predictions(instances.to(self.cpu_device),'MOTchallenge')
             }
             #tracker_preds = self.detections_annotations.get_instance_predictions(instances.to(self.cpu_device))
         
         data[self.dst] = tracker_preds  
-        with open('predictions.txt','a') as outfile:
-            json.dump(tracker_preds,outfile)
-            outfile.write('\n')
-
+        if self.preds_format != 'MOTchallenge':
+            with open('predictions.txt','w') as outfile:
+                json.dump(tracker_preds,outfile)
+                outfile.write('\n')
+        else:
+            import csv
+            val_string = ''
+            with open('predictions.txt', 'a') as f:    
+                for i in tracker_preds["detections"]:
+                    val_string = val_string + tracker_preds["frame"]+','+i+'\n'
+                f.write(val_string)
+        
         #print(tracker_preds)     
         #{"frame":0,"detections":[{"x":1635,"y":247,"w":61,"h":38,"confidence":38,"name":"car"},{"x":1799,"y":250,"w":54,"h":33,"confidence":33,"name":"car"}]}

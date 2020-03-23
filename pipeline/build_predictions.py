@@ -26,21 +26,16 @@ class _DetectedInstance:
         self.score = score
         self.ttl = ttl
 
-    def get_tracker_predictions(self):
-        #XYXY_ABS: (x0, y0, x1, y1) in absolute floating points coordinates.
-        #The coordinates in range [0, width or height].
+    def get_tracker_predictions(self,mode):
+        #Coordinates are in XYXY_ABS: (x0, y0, x1, y1)
+        #Return coordinates in range [a point,width,height].
         #XYWH_ABS: (x0, y0, w, h) in absolute floating points coordinates.
-        pred = {}
-        # compute centroid of the bbox ((x1+x2)/2, (y1+y2)/2)
-        x,y = ((self.bbox[0]+self.bbox[2])/2, (self.bbox[1]+self.bbox[3])/2)
-        #print(x,y)
-        bbox_mode = BoxMode.XYXY_ABS
-        #print('self.bbox 11111',self.bbox)
-        self.bbox = BoxMode.convert(self.bbox, bbox_mode, BoxMode.XYWH_ABS)
-        #print('self.bbox 333',self.bbox)
-        #{"x":1635,"y":247,"w":61,"h":38,"confidence":38,"name":"car"}
-        #TODO we are not sending center point
-        pred = {
+        
+        if mode == 'centroidWH':
+            # compute centroid of the bbox ((x1+x2)/2, (y1+y2)/2)
+            x,y = ((self.bbox[0]+self.bbox[2])/2, (self.bbox[1]+self.bbox[3])/2)
+            #pred = {}
+            pred = {
             "x":int(x),
             "y":int(y),
             "w":int(self.bbox[2]),
@@ -48,8 +43,26 @@ class _DetectedInstance:
             "confidence":int(float(self.score)*100),
             "name": self.textLabel
         }
-        return (pred)
-    
+        else:
+            predList = []
+            #get top-left corner
+            x,y = (self.bbox[0],self.bbox[3])
+            #get W/H
+            #convert using detectron2 utils
+            bbox_mode = BoxMode.XYXY_ABS
+            self.bbox = BoxMode.convert(self.bbox, bbox_mode, BoxMode.XYWH_ABS)
+            #From paper MOT 2015
+            #1, -1, 794.2, 47.5, 71.2, 174.8, 67.5, -1, -1, -1
+            predList.append('-1')
+            predList.append(str(round(x,2)))
+            predList.append(str(round(y,2)))
+            predList.append(str(round(self.bbox[2],2)))
+            predList.append(str(round(self.bbox[3],2)))
+            predList.append(str(round(float(self.score*100),2)))
+            predList.append('-1, -1, -1')                        
+            pred = ' ,'.join(predList)   
+            
+        return pred
 
 class DetectionsTxt:
     def __init__(self, metadata):
@@ -60,12 +73,11 @@ class DetectionsTxt:
         self.metadata = metadata
         self._old_instances = []        
 
-    def get_instance_predictions(self,predictions):
+    def get_instance_predictions(self,predictions,preds_format):
         """
         Draw instance-level prediction results on an image.
 
         Args:
-            frame (ndarray): an RGB image of shape (H, W, C), in the range [0, 255].
             predictions (Instances): the output of an instance detection/segmentation
                 model. Following fields will be used to draw:
                 "pred_boxes", "pred_classes", "scores", "pred_masks" (or "pred_masks_rle").
@@ -83,8 +95,14 @@ class DetectionsTxt:
 
         masks = None
 
-        detected = []
+        detected = []       
+        detectedMOT = ''
         for i in range(num_instances):
                 textLabel = self.metadata.get("thing_classes")[classes[i]]
-                detected.append(_DetectedInstance(classes[i],textLabel, boxes[i], scores[i],ttl=8).get_tracker_predictions())
+                if preds_format == 'MOTchallenge':
+                    detected.append(_DetectedInstance(classes[i],textLabel, boxes[i], scores[i],ttl=8).get_tracker_predictions('MOT'))
+                    detectedMOT += ('\n')
+                else:
+                    detected.append(_DetectedInstance(classes[i],textLabel, boxes[i], scores[i],ttl=8).get_tracker_predictions('centroidWH'))
+
         return detected

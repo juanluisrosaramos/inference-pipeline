@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "/home/juanluis/workingrrr/mapubli/detectron2-pipeline/process_video.py",
             "console": "integratedTerminal",
-            "args" : ["-i", "assets/videos/gente5.mp4","-p"],
+            "args" : ["-i", "../videos/MOT17-02.webm","-p","-d","--config-file","configs/COCO-Detection/retinanet_R_50_FPN_3x.yaml"],
             
         }
     ]

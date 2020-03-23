@@ -16,8 +16,7 @@ from pipeline.track_pose import TrackPose
 
 
 def parse_args():
-    import argparse
-
+    import argparse    
     # Parse command line arguments
     ap = argparse.ArgumentParser(description="Detectron2 video processing pipeline")
     ap.add_argument("-i", "--input", default="0",
@@ -36,6 +35,8 @@ def parse_args():
                     help="separate background")
     ap.add_argument("-tp", "--track-pose", action="store_true",
                     help="track pose")
+    # ap.add_argument("-pf", "--preds_format", action="MOTchallenge",
+    #                 help="Predictions results format type")
 
     # Detectron settings
     ap.add_argument("--config-file",
