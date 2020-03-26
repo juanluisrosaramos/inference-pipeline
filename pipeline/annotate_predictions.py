@@ -58,9 +58,10 @@ class AnnotatePredictions(Pipeline):
             import csv
             val_string = ''
             with open('predictions.txt', 'a') as f:    
-                for i in tracker_preds["detections"]:
-                    val_string = val_string + tracker_preds["frame"]+','+i+'\n'
-                f.write(val_string)
+                if tracker_preds["detections"] != None:
+                    for i in tracker_preds["detections"]:
+                        val_string = val_string + tracker_preds["frame"]+','+i+'\n'
+                    f.write(val_string)
         
         #print(tracker_preds)     
         #{"frame":0,"detections":[{"x":1635,"y":247,"w":61,"h":38,"confidence":38,"name":"car"},{"x":1799,"y":250,"w":54,"h":33,"confidence":33,"name":"car"}]}

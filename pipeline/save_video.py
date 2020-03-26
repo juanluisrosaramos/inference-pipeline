@@ -23,7 +23,8 @@ class SaveVideo(Pipeline):
         image = data[self.src]
 
         if self.writer is None:
-            h, w = image.shape[:2]
+            h, w = image.shape[:2]            
+            cv2.waitKey(0)
             self.writer = cv2.VideoWriter(
                 filename=self.filename,
                 fourcc=cv2.VideoWriter_fourcc(*self.fourcc),

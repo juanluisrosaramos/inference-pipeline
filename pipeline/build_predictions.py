@@ -46,7 +46,7 @@ class _DetectedInstance:
         else:
             predList = []
             #get top-left corner
-            x,y = (self.bbox[0],self.bbox[3])
+            x,y = (self.bbox[0],self.bbox[1])
             #get W/H
             #convert using detectron2 utils
             bbox_mode = BoxMode.XYXY_ABS
@@ -54,10 +54,12 @@ class _DetectedInstance:
             #From paper MOT 2015
             #1, -1, 794.2, 47.5, 71.2, 174.8, 67.5, -1, -1, -1
             predList.append('-1')
+            #y -= round(self.bbox[2],2)
             predList.append(str(round(x,2)))
             predList.append(str(round(y,2)))
             predList.append(str(round(self.bbox[2],2)))
             predList.append(str(round(self.bbox[3],2)))
+            
             predList.append(str(round(float(self.score*100),2)))
             predList.append('-1, -1, -1')                        
             pred = ' ,'.join(predList)   
